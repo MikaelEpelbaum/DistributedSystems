@@ -10,7 +10,6 @@ public class ExManager {
     public ExManager(String path) throws FileNotFoundException{
         this.path = path;
         initial_data = new Scanner(new File(path));
-        read_txt();
     }
 
 //  todo: which one of the functions to keep? weight for response
@@ -26,15 +25,16 @@ public class ExManager {
     }
 
     public void update_edge(int id1, int id2, double weight){
-        //your code here
+        network[id1].edge_update(id2, weight);
+        network[id2].edge_update(id1, weight);
     }
 
     public void read_txt() {
         num_of_nodes = Integer.parseInt(initial_data.nextLine());
-        this.network = new Node[num_of_nodes];
-
+        this.network = new Node[num_of_nodes+1];
+        String line;
         while (initial_data.hasNextLine()) {
-            String line = initial_data.nextLine();
+             line = initial_data.nextLine();
             if (line.equals("stop"))
                 break;
             Node n = new Node(num_of_nodes, line);

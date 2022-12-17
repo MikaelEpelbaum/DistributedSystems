@@ -2,9 +2,9 @@ import java.util.*;
 
 public class Node extends Thread {
     private int id;
-    private ArrayList<Pair> neighbors;
-    private int num_of_nodes;
-    private double[][] matrix;
+    public ArrayList<Pair> neighbors;
+    public int num_of_nodes;
+    public double[][] matrix;
 
     /**
      * Constructor
@@ -15,13 +15,13 @@ public class Node extends Thread {
      */
     public Node(int num_of_nodes, String line){
         this.num_of_nodes = num_of_nodes;
-        matrix = new double[num_of_nodes][num_of_nodes];
-        for(int i = 0; i < num_of_nodes; i++){
-            for (int j = 0; j < num_of_nodes; j++){
+        matrix = new double[num_of_nodes + 1][num_of_nodes + 1];
+        for(int i = 0; i < num_of_nodes+1; i++){
+            for (int j = 0; j < num_of_nodes+1; j++){
                 matrix[i][j] = -1;
             }
         }
-        update_node(line);
+        neighbors_initialize(line);
     }
     public int get_id(){ return this.id; }
 
@@ -32,7 +32,7 @@ public class Node extends Thread {
      * updates neighbor list with new neighbor
      * updates neighbors matrix of node
      */
-    public void update_node(String line){
+    public void neighbors_initialize(String line){
         String[] orders = line.split(" ");
         neighbors = new ArrayList<>((orders.length -1)/4);
         this.id  = Integer.parseInt(orders[0]);
@@ -64,6 +64,25 @@ public class Node extends Thread {
         this.matrix[this.id][edge.getKey()] = temp.get("weight");
     }
 
+    public void edge_update(int id, double weight){
+        Integer temp = id;
+        for(int i = 0; i < neighbors.size(); i++){
+            if (neighbors.get(i).getKey() == temp){
+                Map<String, Double> map = (Map<String, Double>) neighbors.get(i).getValue();
+                map.put("weight", weight);
+                update_matrix(neighbors.get(i));
+            }
+        }
+    }
+
+    public void LinkStateRouting(){
+//        send weights of v to all graph
+        double[] lv = matrix[id];
+
+
+    }
+
+//    todo: how should the printing graph look like? only relevant vector or all matrix?
     public void print_graph(){
 
     }

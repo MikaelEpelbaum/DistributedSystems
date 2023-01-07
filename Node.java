@@ -1,10 +1,8 @@
-import java.sql.Struct;
-import java.util.*;
 import java.net.*;
 import java.util.*;
 import java.io.*;
 
-public class Node extends Thread {
+public class Node implements Runnable {
     private int id;
     public ArrayList<Pair> neighbors;
     public int num_of_nodes;
@@ -80,6 +78,21 @@ public class Node extends Thread {
 
     @Override
     public void run(){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         Pair<Integer, double[]> lv = new Pair<>(id, matrix[id-1]);
 
         Map<Integer, Boolean> updated = new HashMap<>();
@@ -131,8 +144,18 @@ public class Node extends Thread {
 //        return true;
     }
 
+    private Socket node;
+    private BufferedReader in;
+    private PrintWriter out;
+    public void send_data(Map<String, Double> neighbor, Pair<Integer, double[]> lv, Socket nodeSocket){
+        this.node = nodeSocket;
+        try {
+            in = new BufferedReader(new InputStreamReader(nodeSocket.getInputStream()));
+            out = new PrintWriter(node.getOutputStream());
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
 
-    public void send_data(Map<String, Double> neighbor, Pair<Integer, double[]> lv){
         int port_dest = neighbor.get("port_dest").intValue();
         try {
             Socket client = new Socket("localhost", port_dest);

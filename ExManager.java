@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.*;
 import java.util.*;
 
 public class ExManager {
@@ -41,7 +42,15 @@ public class ExManager {
         }
     }
 
-    public void start(){
+
+
+    public void start() throws IOException {
+        ServerSocket listener = new ServerSocket("6060");
+        Socket node = listener.accept();
+
+        PrintWriter out = new PrintWriter(node.getOutputStream(), true);
+        BufferedReader in = new BufferedReader(new InputStreamReader(node.getInputStream()));
+
 //        Map<Integer, Boolean> updated = new HashMap<>();
 //        for (int i = 0; i < num_of_nodes; i++)
 //            updated.put(i, false);

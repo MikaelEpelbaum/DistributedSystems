@@ -2,7 +2,7 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-public class Node implements Runnable {
+public class Node {
     private int id;
     public ArrayList<Pair> neighbors;
     public int num_of_nodes;
@@ -76,98 +76,109 @@ public class Node implements Runnable {
         }
     }
 
-    @Override
-    public void run(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        Pair<Integer, double[]> lv = new Pair<>(id, matrix[id-1]);
-
-        Map<Integer, Boolean> updated = new HashMap<>();
-        for (int i = 0; i < num_of_nodes; i++)
-            updated.put(i, false);
-        updated.put(id-1, true);
-
-
-//      sends my lv to all my neighbors
-        for (int i = 0; i < neighbors.size(); i++) {
-            Map<String, Double> neighbor =  (Map<String, Double>)neighbors.get(i).getValue();
-            send_data(neighbor, lv);
-        }
-
-        while (updated.containsValue(false)) {
-            for (int i = 0; i < neighbors.size(); i++) {
-                Map<String, Double> neighbor =  (Map<String, Double>)neighbors.get(i).getValue();
-                int port_origin = neighbor.get("port_origin").intValue();
-                Pair<Integer, double[]> neighbor_update = new Pair<>(-1, new double[0]);
-                try {
-                    Socket client = new Socket("localhost", port_origin);
-                    InputStream inputToServer = client.getInputStream();
-                    ObjectInputStream input = new ObjectInputStream(inputToServer);
-                    neighbor_update = (Pair<Integer, double[]>)input.readObject();
-                    client.close();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-//              todo: updates updates vector, matrix, broadcast to other neighbor what we got
-                int neighbor_id = neighbor_update.getKey();
-                if (neighbor_id == -1 || updated.get(neighbor_id))
-                    continue;
-                else {
-                    updated.put(neighbor_id, true);
-                    this.matrix[neighbor_id-1] = neighbor_update.getValue();
-                    for (int j = 0; j < neighbors.size(); j++){
-//                      we send to the other neighbors the lv from the one we just got
-                        if (i != j){
-                            Map<String, Double> neighbor_to_broadcast =  (Map<String, Double>)neighbors.get(i).getValue();
-                            send_data(neighbor_to_broadcast, neighbor_update);
-                        }
-                    }
-                }
+    public void sendMessage(){
+//      broadcast to neighbor everything you get beside if its from them (transfer)
+//      lv = <[origin, destination], value matrix of origin>
+        Pair<Integer[], double[]> lv = new Pair<>(new Integer[]{id, 0}, matrix[id-1]);
+//      for every neighbor send my lv
+        for (int j = 0; j < neighbors.size(); j++){
+            Map<String, Double> neighbor = (Map<String, Double>) neighbors.get(j).getValue();
+            int port_destination = neighbor.get("port_dest").intValue();
+            Integer destination_id = ((Integer) neighbors.get(j).getKey()).intValue();
+            lv.setKey(new Integer[]{lv.getKey()[0], destination_id});
+            try {
+                Socket socket = new Socket("localhost", port_destination);
+                Client client = new Client(socket, lv, id);
+                client.sendMessage();
+            } catch (IOException e) {
             }
         }
-//        returns true because finished all updates
-//        return true;
     }
 
-    private Socket node;
-    private BufferedReader in;
-    private PrintWriter out;
-    public void send_data(Map<String, Double> neighbor, Pair<Integer, double[]> lv, Socket nodeSocket){
-        this.node = nodeSocket;
-        try {
-            in = new BufferedReader(new InputStreamReader(nodeSocket.getInputStream()));
-            out = new PrintWriter(node.getOutputStream());
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        int port_dest = neighbor.get("port_dest").intValue();
-        try {
-            Socket client = new Socket("localhost", port_dest);
-            OutputStream outToServer = client.getOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(outToServer);
-            out.writeObject(lv);
-            client.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    @Override
+//    public void run(){
+////      broadcast to neighbor everything you get beside if its from them (transfer)
+//
+//        Pair<Integer, double[]> lv = new Pair<>(id, matrix[id-1]);
+//
+////      for every neighbor send my lv
+//        for (int j = 0; j < neighbors.size(); j++){
+//            Map<String, Double> neighbor = (Map<String, Double>) neighbors.get(j).getValue();
+//            int port_destination = neighbor.get("port_dest").intValue();
+//            try {
+//                Socket socket = new Socket("localhost", port_destination);
+//                Client client = new Client(socket, lv, id);
+//                client.sendMessage();
+////                new Thread(client).start();
+//            } catch (IOException e) {
+//            }
+//        }
+
+//        Map<Integer, Boolean> updated = new HashMap<>();
+//        for (int i = 0; i < num_of_nodes; i++)
+//            updated.put(i, false);
+//        updated.put(id-1, true);
+//
+//        for (int j = 0; j < neighbors.size(); j++){
+//            Map<String, Double> neighbor = (Map<String, Double>) neighbors.get(j).getValue();
+//            int port_destination = neighbor.get("port_dest").intValue();
+//            try {
+//                Socket socket = new Socket("localhost", port_destination);
+//                Client client = new Client(socket, lv, id);
+//                new Thread(client).start();
+////                client.sendMessage();
+//                client.listenToMessage();
+////                while (client.lv_to_return == null){
+////                }
+////                System.out.println(client.lv_to_return);
+//            } catch (IOException e) {
+//            }
+//        }
+//
+////      sends my lv to all my neighbors
+//        for (int i = 0; i < neighbors.size(); i++) {
+//            Map<String, Double> neighbor =  (Map<String, Double>)neighbors.get(i).getValue();
+////            send_data(neighbor, lv);
+//        }
+
+//
+//        while (updated.containsValue(false)) {
+//            for (int i = 0; i < neighbors.size(); i++) {
+//                Map<String, Double> neighbor =  (Map<String, Double>)neighbors.get(i).getValue();
+//                int port_origin = neighbor.get("port_origin").intValue();
+//                Pair<Integer, double[]> neighbor_update = new Pair<>(-1, new double[0]);
+//                try {
+//                    Socket client = new Socket("localhost", port_origin);
+//                    InputStream inputToServer = client.getInputStream();
+//                    ObjectInputStream input = new ObjectInputStream(inputToServer);
+//                    neighbor_update = (Pair<Integer, double[]>)input.readObject();
+//                    client.close();
+//                }
+//                catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//
+////              todo: updates updates vector, matrix, broadcast to other neighbor what we got
+//                int neighbor_id = neighbor_update.getKey();
+//                if (neighbor_id == -1 || updated.get(neighbor_id))
+//                    continue;
+//                else {
+//                    updated.put(neighbor_id, true);
+//                    this.matrix[neighbor_id-1] = neighbor_update.getValue();
+//                    for (int j = 0; j < neighbors.size(); j++){
+////                      we send to the other neighbors the lv from the one we just got
+//                        if (i != j){
+//                            Map<String, Double> neighbor_to_broadcast =  (Map<String, Double>)neighbors.get(i).getValue();
+////                            send_data(neighbor_to_broadcast, neighbor_update);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+////        returns true because finished all updates
+////        return true;
+//    }
 
 //    todo: how should the printing graph look like? only relevant vector or all matrix?
     public void print_graph(){

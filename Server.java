@@ -1,46 +1,31 @@
 import java.net.*;
-import java.util.*;
 import java.io.*;
 
-public class Server {
-    private ServerSocket ServerSocket;
+public class Server  extends Thread{
+    private ServerSocket serverSocket;
+    private int id;
+    public Pair<Integer[], double[]>  lv;
 
-    public Server(ServerSocket serverSocket){
-        this.ServerSocket = serverSocket;
+    public Server(ServerSocket serverSocket, int id){
+        this.serverSocket = serverSocket;
+        this.id = id;
     }
 
-    public void startServer() {
+    @Override
+    public void run() {
         try {
-            while (ServerSocket.isClosed()){
-                Socket socket = ServerSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(socket);
+            while (!serverSocket.isClosed()) {
+                Socket socket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(socket, id);
 
                 Thread thread = new Thread(clientHandler);
                 thread.start();
+                thread.join();
+                lv = clientHandler.getValue();
+//                serverSocket.close();
             }
-        }
-        catch (IOException e){
-
+        } catch (IOException | InterruptedException e) {
         }
     }
-    public void closeServerSocket(){
-        try{
-            if (ServerSocket != null){
-                ServerSocket.close();
-            }
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    // maybe should be in the node?
-    public static void main (String[] args) throws IOException{
-        //needs to put our ports
-        SeverSocket serverSocket = new ServerSocket(1234);
-        Server server = new Server(ServerSocket);
-        server.startServer();
-    }
-
-
+    public Pair<Integer[], double[]> getValue(){ return lv;}
 }

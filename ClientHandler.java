@@ -2,47 +2,80 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-public class ClientHandler implements Runnable {
-    // keep track of all our clients
-    //broadcast a message to all of our clients and not just one
-    public static ArrayList <ClientHandler> clientHandlers = new ArrayList<>();
-    //socket that has passed from our server class
-    private Socket socket;
-    //used to read date - massages that came from the client
-    private BufferedReader bufferReader;
-    //use to sent data to the client - messages that came from other clients
-    private BufferedWriter bufferWriter;
-    //private String clientUserName;
+public class ClientHandler implements Runnable{
 
-    //constactror
-    public ClientHandler (Socket socket){
+    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    private Socket socket;
+    private ObjectOutputStream objectOutputStream;
+    private ObjectInputStream objectInputStream;
+    private int id;
+    public Pair<Integer[], double[]> gotten_lv;
+
+    public ClientHandler(Socket socket, int id){
+        this.id = id;
         try{
             this.socket = socket;
-            //use to send things
-            this.bufferWriter = new BufferedWriter (new OutputStreamWriter(socket.getOutputStream()));
-            //use to read things
-            this.bufferReader = new BufferedReader (new InputStreamReader(socket.getInputStream()));
-
+            OutputStream outputStream = socket.getOutputStream();
+            this.objectOutputStream = new ObjectOutputStream(outputStream);
+            InputStream inputStream = socket.getInputStream();
+            this.objectInputStream = new ObjectInputStream(inputStream);
+            clientHandlers.add(this);
+        }catch (IOException e){
+            closeEverything();
         }
-        catch (IOException e){
 
-            closeEverything(socket, bufferReader, bufferWriter);
-        }
     }
 
     @Override
     public void run(){
-        String messageFromClient;
+        Pair<Integer[], double[]> lv;
+        while(socket.isConnected()){
+            try {
+                lv = (Pair<Integer[], double[]>) objectInputStream.readObject();
+                gotten_lv = lv;
+                String str = "";
+                for (int k = 0; k < lv.getValue().length; k++)
+                    str +=  String.valueOf(lv.getValue()[k]) + ", ";
+                System.out.println("Origin: " + lv.getKey()[0].intValue() + " Destination: " + lv.getKey()[1].intValue()+ ": " + str);
 
-        while (socket.isConnected()){
-            try{
-                messageFromClient = bufferReader.readLine();
-                broadCastMessage(messageFromClient);
-            }
-            catch (IOException e){
-                closeEverything(socket, bufferReader, bufferWriter);
+                socket.close();
+//                broadcastMessage(lv);
+            } catch(IOException | ClassNotFoundException e) {
+                closeEverything();
                 break;
             }
+        }
+    }
+
+    public Pair<Integer[], double[]> getValue() {return gotten_lv;}
+
+//    public void broadcastMessage(Pair<Integer, double[]> messageToSend){
+//        for (ClientHandler clientHandler : clientHandlers){
+//            try{
+//                if (this.id != messageToSend.getKey().intValue()) {
+//                    clientHandler.objectOutputStream.writeObject(messageToSend);
+//                    clientHandler.objectOutputStream.flush();
+//                }
+//            } catch (IOException e){
+//                closeEverything();
+//            }
+//        }
+//    }
+
+    public void removeClientHandler(){
+        clientHandlers.remove(this);
+    }
+
+    public void closeEverything(){
+        removeClientHandler();
+        try{
+            if (this.objectInputStream != null)
+                this.objectInputStream.close();
+            if (this.objectOutputStream != null)
+                this.objectOutputStream.close();
+            if (this.socket != null)
+                this.socket.close();
+        } catch (IOException e) {
         }
     }
 }

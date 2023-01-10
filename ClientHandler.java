@@ -4,70 +4,53 @@ import java.io.*;
 
 public class ClientHandler implements Runnable{
 
-    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
     private Socket socket;
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
-    private int id;
-    public Pair<Integer[], double[]> gotten_lv;
 
-    public ClientHandler(Socket socket, int id){
-        this.id = id;
+    private Pair<Integer[], Double[]> lv_to_send;
+    private Pair<Integer[], Double[]> lv_recieved;
+
+    public ClientHandler(Socket socket){
         try{
             this.socket = socket;
             OutputStream outputStream = socket.getOutputStream();
             this.objectOutputStream = new ObjectOutputStream(outputStream);
             InputStream inputStream = socket.getInputStream();
             this.objectInputStream = new ObjectInputStream(inputStream);
-            clientHandlers.add(this);
         }catch (IOException e){
             closeEverything();
         }
 
     }
 
+    public void set_lv_to_send(Pair<Integer[], Double[]> lv){ this.lv_to_send = lv;}
+    public Pair<Integer[], Double[]> get_lv_recieved(){ return lv_recieved;}
+
     @Override
     public void run(){
-        Pair<Integer[], double[]> lv;
+        Pair<Integer[], Double[]> lv;
         while(socket.isConnected()){
             try {
-                lv = (Pair<Integer[], double[]>) objectInputStream.readObject();
-                gotten_lv = lv;
-                String str = "";
-                for (int k = 0; k < lv.getValue().length; k++)
-                    str +=  String.valueOf(lv.getValue()[k]) + ", ";
-                System.out.println("Origin: " + lv.getKey()[0].intValue() + " Destination: " + lv.getKey()[1].intValue()+ ": " + str);
+                lv_recieved = (Pair<Integer[], Double[]>) objectInputStream.readObject();
+                objectOutputStream.writeObject(lv_recieved);
+                objectOutputStream.flush();
+                System.out.println("Server got message on port: " + socket.getLocalPort() + " message is: [" + lv_recieved.getValue()[0].intValue() + ", "+  lv_recieved.getValue()[1].intValue()+"]");
 
-                socket.close();
-//                broadcastMessage(lv);
             } catch(IOException | ClassNotFoundException e) {
-                closeEverything();
-                break;
             }
         }
     }
 
-    public Pair<Integer[], double[]> getValue() {return gotten_lv;}
-
-//    public void broadcastMessage(Pair<Integer, double[]> messageToSend){
-//        for (ClientHandler clientHandler : clientHandlers){
-//            try{
-//                if (this.id != messageToSend.getKey().intValue()) {
-//                    clientHandler.objectOutputStream.writeObject(messageToSend);
-//                    clientHandler.objectOutputStream.flush();
-//                }
-//            } catch (IOException e){
-//                closeEverything();
-//            }
-//        }
-//    }
-
-    public void removeClientHandler(){
-        clientHandlers.remove(this);
+    public void sendMessage(Pair<Integer[], Double[]> lv_to_send){
+        try {
+            objectOutputStream.writeObject(lv_to_send);
+            objectOutputStream.flush();
+        } catch (IOException e) {}
     }
 
     public void closeEverything(){
-        removeClientHandler();
+//        removeClientHandler();
         try{
             if (this.objectInputStream != null)
                 this.objectInputStream.close();

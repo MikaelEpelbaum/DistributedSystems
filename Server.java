@@ -1,10 +1,11 @@
 import java.net.*;
 import java.io.*;
+import java.util.ArrayList;
 
 public class Server  extends Thread{
     private ServerSocket serverSocket;
+    public Pair<Integer[], Double[]>  lv;
     private int id;
-    public Pair<Integer[], double[]>  lv;
 
     public Server(ServerSocket serverSocket, int id){
         this.serverSocket = serverSocket;
@@ -16,16 +17,23 @@ public class Server  extends Thread{
         try {
             while (!serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(socket, id);
+                ClientHandler clientHandler = new ClientHandler(socket);
 
                 Thread thread = new Thread(clientHandler);
                 thread.start();
-                thread.join();
-                lv = clientHandler.getValue();
+                lv = clientHandler.get_lv_recieved();
 //                serverSocket.close();
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
         }
     }
-    public Pair<Integer[], double[]> getValue(){ return lv;}
+
+    public void sendMessage(Pair<Integer[], Double[]> lv_to_send){
+        try{
+            Socket socket = serverSocket.accept();
+            ClientHandler clientHandler = new ClientHandler(socket);
+            clientHandler.sendMessage(lv_to_send);
+        } catch (IOException e){}
+    }
+
 }

@@ -44,48 +44,60 @@ public class ExManager {
 
 //  link state routing
     public void start() {
-//      creating and lunching a server for every edge connection
-        int cnt = 0;
         for (int i = 0; i < network.length; i++) {
-            ArrayList<Pair> neighbors = (ArrayList<Pair>) network[i].neighbors;
-            for (int j = 0; j < neighbors.size(); j++) {
-                Pair<Integer, Map> edge = (Pair<Integer, Map>) neighbors.get(j);
-                Double port_origin = (Double) edge.getValue().get("port_origin");
-                try {
-                    ServerSocket serverSocket = new ServerSocket(port_origin.intValue());
-                    Server server = new Server(serverSocket, network[i].get_id());
-
-                    servers[cnt] = server;
-                    cnt++;
-
-                    Thread thread = new Thread(server);
-                    thread.start();
-                } catch (IOException e) {
-                }
-            }
+            Thread thread = new Thread(network[i]);
+            thread.start();
         }
 
-//      nodes send lv
-        for (int i = 0; i < network.length; i++) {
-            network[i].sendMessage();
-        }
+//
+////      creating and lunching a server for every edge connection
+//        int cnt = 0;
+//
+//        for (int i = 0; i < network.length; i++) {
+//            ArrayList<Pair> neighbors = (ArrayList<Pair>) network[i].neighbors;
+//            for (int j = 0; j < neighbors.size(); j++) {
+//                Pair<Integer, Map> edge = (Pair<Integer, Map>) neighbors.get(j);
+//                Double port_origin = (Double) edge.getValue().get("port_origin");
+//                try {
+//                    ServerSocket serverSocket = new ServerSocket(port_origin.intValue());
+//                    Server server = new Server(serverSocket, network[i].get_id(), num_of_nodes, neighbors);
+//
+//                    servers[cnt] = server;
+//                    cnt++;
+//
+//                    Thread thread = new Thread(server);
+//                    thread.start();
+//                } catch (IOException e) {
+//                }
+//            }
+//        }
 
-        cnt = 0;
-        for (int i = 0; i < network.length; i++) {
-            ArrayList<Pair> neighbors = (ArrayList<Pair>) network[i].neighbors;
-            for (int j = 0; j < neighbors.size(); j++) {
-                Pair<Integer[], double[]> lv = servers[cnt].getValue();
-                cnt++;
-                try{
-                    String str = "";
-                    for (int k = 0; k < lv.getValue().length; k++)
-                        str +=  String.valueOf(lv.getValue()[k]) + ", ";
-//                    System.out.println(lv.getKey().intValue()+ " :" + str);
+////      nodes send lv
+//        for (int i = 0; i < network.length; i++) {
+//            network[i].sendMessage();
+//        }
 
-                } catch (NullPointerException e){
-//                    System.out.println(lv.getKey().intValue());
-                }
-            }
-        }
+
+//        for (int i = 0; i < network.length; i++) {
+//            Thread thread = new Thread(network[i]);
+//            thread.start();
+//        }
+
+//        cnt = 0;
+//        for (int i = 0; i < network.length; i++) {
+//            ArrayList<Pair> neighbors = (ArrayList<Pair>) network[i].neighbors;
+//            for (int j = 0; j < neighbors.size(); j++) {
+//                Pair<Integer[], Double[]> lv = servers[cnt].getValue();
+//                cnt++;
+//                try{
+//                    String str = "";
+//                    for (int k = 0; k < lv.getValue().length; k++)
+//                        str +=  String.valueOf(lv.getValue()[k]) + ", ";
+////                    System.out.println(lv.getKey().intValue()+ " :" + str);
+//
+//                } catch (NullPointerException e){
+//                }
+//            }
+//        }
     }
 }
